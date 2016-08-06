@@ -1,0 +1,210 @@
+---
+title: "Machine Learning and Human Activity Recognition: Building a Classifier for Wearable Accelerometers’ Data"
+author: "@jrcajide"
+date: 07-08-2016
+output:
+  html_notebook: default
+  html_document: default
+---
+
+[Human Activity Recognition](https://en.wikipedia.org/wiki/Activity_recognition) is a new and key research area in the last years and is gaining increasing attention by the pervasive computing research community. 
+
+Research on activity recognition has traditionally focused on discriminating between different activities, i.e. to predict "which" activity was performed at a specic point in time. 
+
+This analysis (based on [Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/work.jsf?p1=11201), focuses in the **quality of executing an activity** and the results underline the potential of model-based assessment and the positive impact of real-time user feedback on the quality of execution.
+
+The data, [Weight Lifting Exercises Dataset](http://groupware.les.inf.puc-rio.br/har) is about six young health participants that performed one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+**Random forest** was the machine learning model used to classify unlabeled data achieved from the 4 accelerometers in the test data set and predict the class of each repetition based 52 variables.
+
+# 1. Load training and testing data
+
+Data importing and wrangling tasks were performed used `data.table` library. 
+
+`Empty/NaN/NA/#DIV/0!` values found in the original data set were labeled as *missing data*. 
+
+```{r, echo=TRUE}
+rm(list = ls());gc(reset = T)
+set.seed(1973)
+
+# loading libraries -------------------------------------------------------
+library(data.table)
+library(knitr)
+library(randomForest)
+library(doParallel)
+library(caret)
+library(ggplot2)
+library(ggthemes)
+library(viridis)
+
+# parallelizing -----------------------------------------------------------
+
+# numCores <- detectCores()
+# cl <- makeCluster(numCores - 2) 
+# registerDoParallel(cl) 
+
+# importing data ----------------------------------------------------------
+
+DT.train <- fread("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", stringsAsFactors = F, drop = 'V1', na.strings = c('','#DIV/0!','NA'))
+DT.test <- fread("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", stringsAsFactors = F, drop = 'V1', na.strings = c('','#DIV/0!','NA'))
+```
+
+# 2. Exploratory data analysis
+
+## Missing values
+Many of the variables have a high percentage of missing values.
+
+```{r, echo=TRUE}
+str(DT.train)
+```
+
+
+There are several variables that contain approximately 97.93% missing values.
+
+```{r}
+# missing values ----------------------------------------------------------
+# Percentagg of missing values by variable:
+sapply(DT.train, function(x) sum(is.na(x)) / nrow(DT.train) )
+```
+
+Those variables were removed from the data sets:
+```{r}
+DT.train <- DT.train[, .SD, .SDcols=sapply(DT.train, function(x) (sum(is.na(x))) / nrow(DT.train)) < 0.9793089  ]
+DT.test <- DT.test[, .SD, .SDcols=sapply(DT.test, function(x) (sum(is.na(x))) / nrow(DT.test)) < 0.9793089  ]
+```
+
+Only common variables in both training and testing data sets, related to the belt, forearm, arm and dumbell, are needed to predict the `classe` variable:
+
+```{r}
+DT.train <- DT.train[, grep("classe|belt|arm|dumbbell",names(DT.train)), with=F]
+DT.train <- DT.train[, which((names(DT.train) %in% names(DT.test)) | names(DT.train)=="classe"), with=F]
+DT.train <- DT.train[, classe := as.factor(classe)]
+DT.train[]
+```
+
+## Classes
+
+Simply barplot showing the frequency of each class in the training data set:
+
+```{r}
+barplot(table(DT.train$classe),col=viridis(5), border = "white", main="Classes for repetitions of the Unilateral Dumbbell Biceps Curl", sub="Exactly according to the specification (Class A), mistakes (Class B to E)")
+```
+
+
+
+
+
+# 3. Cross validation
+
+Cross validation is a technique for assessing how the results of a statistical analysis will generalize to an independent data set. 
+
+Training data set was splited into validation and train data. The `createDataPartition` in the `caret` package was used for this task.
+
+```{r}
+# Cross validation
+inTrain <- createDataPartition(y = DT.train$classe, p = 0.6, list = FALSE)
+DT.validation <- DT.train[-inTrain, ]
+DT.train <- DT.train[inTrain, ] 
+```
+
+# 4. Modelling
+
+The random forests technique examines a large ensemble of decision trees, by first generating a random sample of the original data with replacement (bootstrapping).
+
+## 4.1. Model tunning
+
+`tuneRF` searches for optimal mtry values (with respect to Out-of-Bag error estimate) given the data, that is, the number of variable per level split.
+
+```{r}
+bestmtry <- tuneRF(DT.train[,-ncol(DT.train), with=F], DT.train$classe, ntreeTry=100, stepFactor=1.5, improve=0.01, trace=TRUE, plot=TRUE, dobest=FALSE)
+```
+
+## 4.2. Generating the classification model
+
+A Random forest model was generated with the training data and validated with the validation data. 
+
+
+```{r}
+bestmtry <- bestmtry[bestmtry[, 2] == min(bestmtry[, 2]), 1]
+rf <- randomForest(classe ~ . , data=DT.train, mtry=bestmtry, ntree=1000, keep.forest=TRUE, importance=TRUE, test=DT.validation)
+print(rf)
+
+```
+
+The dark line shows the overall error rate which falls below 0.65%. The other lines shows the error rates for each class classification. 
+
+# 4.3. Assessing model accuracy
+
+Checking model accuracy over the validation data set shows that **the model is able to classify correctly more than 99% of the observations**.
+
+```{r}
+prediction <- predict(rf, DT.validation)
+confusionMatrix(prediction, DT.validation$classe)
+```
+
+```{r}
+# Show model error
+plot(rf, main = "Accuracy as a function of predictors", col=viridis(6))
+legend('topright', colnames(rf$err.rate), col=viridis(6), fill=viridis(6))
+
+```
+## 4.4. Relative variable importance.
+
+* Plotting the mean decrease in Gini calculated across all trees *
+
+For each variable in the data set, it tells how important that variable is in classifying the data. 
+
+The plot shows each variable on the y-axis, and their importance on the x-axis. They are ordered top-to-bottom as most important. to least important. Therefore, the most important variables are at the top and an estimate of their importance is given by the value on the x-axis.
+
+```{r}
+# 4.3 Variable importance
+
+# Let’s look at relative variable importance by plotting the mean decrease in Gini calculated across all trees.
+
+# Get importance
+importance    <- importance(rf)
+varImportance <- data.table(variables = row.names(importance), 
+                            importance = round(importance[ ,'MeanDecreaseGini'],2))
+
+varImportance <- varImportance[, Rank := min_rank(desc(importance))][order((Rank)),]
+# Use ggplot2 to visualize the relative importance of variables
+ggplot(varImportance, aes(x = reorder(variables, importance), y = importance, fill = importance)) +
+  geom_bar(stat='identity') + 
+  geom_text(aes(x = variables, y = 0.5, label = Rank), hjust=0, vjust=0.55, size = 3, colour = 'white') +
+  labs(x = 'Variables', y = 'Importance (Mean Decrease GINI)') +
+  scale_fill_viridis(discrete=F) +
+  coord_flip() + 
+  theme_few() +
+  ggtitle("Relative importance of variables") + 
+  theme(plot.title = element_text(lineheight=.8, face="bold"), legend.position="none") 
+```
+
+* GINI importance measures the average gain of purity by splits of a given variable. *
+
+
+
+# 5. Predict
+Predicting the classes of the 20 observations from the test data set. 
+
+```{r}
+# Predict using the test set
+prediction <- predict(rf, DT.test)
+prediction
+```
+
+```{r}
+# Save the solution adding the clasification result to each observation in the test set
+DT.test$classe <- prediction
+
+# Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes
+
+barplot(table(DT.test$classe),col=viridis(5), border = "white", main="Labels assigned by the model", sub="")
+```
+Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes
+
+# 6. Exporting the results.
+```{r}
+# Write the solution to file
+fwrite(DT.test, "solution.csv", )
+```
+
