@@ -3,8 +3,8 @@ title: "Machine Learning and Human Activity Recognition: Building a Classifier f
 author: "@jrcajide"
 date: 07-08-2016
 output:
-  html_notebook: default
   html_document: default
+  html_notebook: default
 ---
 
 [Human Activity Recognition](https://en.wikipedia.org/wiki/Activity_recognition) is a new and key research area in the last years and is gaining increasing attention by the pervasive computing research community. 
@@ -29,6 +29,7 @@ set.seed(1973)
 
 # loading libraries -------------------------------------------------------
 library(data.table)
+library(dplyr)
 library(knitr)
 library(randomForest)
 library(doParallel)
