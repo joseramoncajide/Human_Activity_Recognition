@@ -19,13 +19,12 @@ In order to classify if each of the repetitions were made according to the speci
 
 The final model achieved **99.3% accuracy** on its classification task.
 
-**K-means Machine Learning Algorithm visually explained**
 ![Image from Weight Lifting Exercises Dataset](img/on-body-sensing-schema.png)
 
 **Files**:
 
- 1. [`har.md`](har.md): a markdown script.
- 2.  [`har.Rmd`](har.Rmd): a R markdown script for reproducible research .
+ 1. [`har.md`](har.md): a markdown script with the project.
+ 2. [`har.Rmd`](har.Rmd): a R markdown script for reproducible research .
  3. [`solution.csv`](solution.csv): Labeled test data.
 
 
