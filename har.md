@@ -12,6 +12,8 @@ The data, [Weight Lifting Exercises Dataset](http://groupware.les.inf.puc-rio.br
 
 **Random forest** was the machine learning model used to classify unlabeled data achieved from the 4 accelerometers in the test data set and predict the class of each repetition based 52 variables.
 
+Although random forest implementation through the `caret` package got a great performance, the final model was tunned and run with the Breiman and Cutler's random forest approach implimented via the `randomForest` package achieving **99% accuracy** on its classification task.
+
 1. Load training and testing data
 =================================
 
@@ -24,8 +26,8 @@ rm(list = ls());gc(reset = T)
 ```
 
     ##          used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells 374082 20.0     592000 31.7   374082 20.0
-    ## Vcells 575463  4.4    1308461 10.0   575463  4.4
+    ## Ncells 374058 20.0     592000 31.7   374058 20.0
+    ## Vcells 575359  4.4    1308461 10.0   575359  4.4
 
 ``` r
 set.seed(1973)
@@ -81,16 +83,6 @@ library(randomForest)
     ##     combine
 
 ``` r
-library(doParallel)
-```
-
-    ## Loading required package: foreach
-
-    ## Loading required package: iterators
-
-    ## Loading required package: parallel
-
-``` r
 library(caret)
 ```
 
@@ -109,12 +101,6 @@ library(caret)
 library(ggplot2)
 library(ggthemes)
 library(viridis)
-
-# parallelizing -----------------------------------------------------------
-
-# numCores <- detectCores()
-# cl <- makeCluster(numCores - 2) 
-# registerDoParallel(cl) 
 
 # importing data ----------------------------------------------------------
 
@@ -603,8 +589,6 @@ print(rf)
     ## D    0    0   25 1902    3 0.0145077720
     ## E    0    0    1    4 2160 0.0023094688
 
-The dark line shows the overall error rate which falls below 0.65%. The other lines shows the error rates for each class classification.
-
 4.3. Assessing model accuracy
 =============================
 
@@ -653,7 +637,12 @@ plot(rf, main = "Accuracy as a function of predictors", col=viridis(6))
 legend('topright', colnames(rf$err.rate), col=viridis(6), fill=viridis(6))
 ```
 
-![](har_files/figure-markdown_github/unnamed-chunk-11-1.png) \#\# 4.4. Relative variable importance.
+![](har_files/figure-markdown_github/unnamed-chunk-11-1.png)
+
+The dark line shows the overall error rate which falls below 0.65%. The other lines shows the error rates for each class classification.
+
+4.4. Relative variable importance.
+----------------------------------
 
 -   Plotting the mean decrease in Gini calculated across all trees \*
 
@@ -712,7 +701,9 @@ DT.test$classe <- prediction
 barplot(table(DT.test$classe),col=viridis(5), border = "white", main="Labels assigned by the model", sub="")
 ```
 
-![](har_files/figure-markdown_github/unnamed-chunk-14-1.png) Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes
+![](har_files/figure-markdown_github/unnamed-chunk-14-1.png)
+
+Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes
 
 6. Exporting the results.
 =========================
