@@ -26,8 +26,8 @@ rm(list = ls());gc(reset = T)
 ```
 
     ##          used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells 374058 20.0     592000 31.7   374058 20.0
-    ## Vcells 575359  4.4    1308461 10.0   575359  4.4
+    ## Ncells 374059 20.0     592000 31.7   374059 20.0
+    ## Vcells 575370  4.4    1308461 10.0   575370  4.4
 
 ``` r
 set.seed(1973)
@@ -522,6 +522,10 @@ barplot(table(DT.train$classe),col=viridis(5), border = "white", main="Classes f
 
 ![](har_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
+``` r
+# barplot(prop.table(table(DT.train$classe)),col=viridis(5))
+```
+
 3. Cross validation
 ===================
 
@@ -639,7 +643,7 @@ legend('topright', colnames(rf$err.rate), col=viridis(6), fill=viridis(6))
 
 ![](har_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
-The dark line shows the overall error rate which falls below 0.65%. The other lines shows the error rates for each class classification.
+The dark line shows the overall error rate which falls below 0.01%. The other lines shows the error rates for each class classification.
 
 4.4. Relative variable importance.
 ----------------------------------

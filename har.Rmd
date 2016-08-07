@@ -81,6 +81,7 @@ Simply barplot showing the frequency of each class in the training data set:
 
 ```{r}
 barplot(table(DT.train$classe),col=viridis(5), border = "white", main="Classes for repetitions of the Unilateral Dumbbell Biceps Curl", sub="Exactly according to the specification (Class A), mistakes (Class B to E)")
+# barplot(prop.table(table(DT.train$classe)),col=viridis(5))
 ```
 
 
@@ -141,7 +142,7 @@ legend('topright', colnames(rf$err.rate), col=viridis(6), fill=viridis(6))
 
 ```
 
-The dark line shows the overall error rate which falls below 0.65%. The other lines shows the error rates for each class classification. 
+The dark line shows the overall error rate which falls below 0.01%. The other lines shows the error rates for each class classification. 
 
 
 ## 4.4. Relative variable importance.
