@@ -1,7 +1,7 @@
 ---
 title: "Machine Learning and Human Activity Recognition: Building a Classifier for Wearable Accelerometers’ Data"
 author: "@jrcajide"
-output: github_document
+output: html_document
 ---
 
 [Human Activity Recognition](https://en.wikipedia.org/wiki/Activity_recognition) is a new and key research area in the last years and is gaining increasing attention by the pervasive computing research community. 
