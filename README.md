@@ -29,6 +29,7 @@ The final model achieved **99.3% accuracy** on its classification task
 
  1. [`har.md`](har.md): a markdown script with the project.
  2. [`har.Rmd`](har.Rmd): a R markdown script for reproducible research .
+ 3. [`har.html`](har.html): R markdown compiled .
  3. [`solution.csv`](solution.csv): Labeled test data.
 
 
